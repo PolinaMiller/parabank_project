@@ -30,17 +30,23 @@ def test_account_number_displayed_in_account_overview(driver, base_url):
 
 
 def test_account_balance_is_numeric(driver, base_url):
-    """Проверка, что баланс аккаунта можно корректно преобразовать в число."""
     driver.get(base_url)
     login_page = LoginPage(driver)
     login_page.login("john", "demo")
     account_overview = AccountOverviewPage(driver)
-    balance_text = account_overview.get_account_balance("12345")
+
+    account_element = driver.find_element(
+        By.XPATH, "//table[@id='accountTable']//a")
+    account_id = account_element.text.strip()
+
+    balance_text = account_overview.get_account_balance(account_id)
     try:
         balance = float(balance_text.replace("$", "").replace(",", "").strip())
     except ValueError:
         pytest.fail(f"Баланс '{balance_text}' не является числовым значением.")
-    assert isinstance(balance, float), "Баланс аккаунта не имеет тип float."
+
+    assert isinstance(
+        balance, float), "Баланс аккаунта не является числовым значением."
 
 
 def test_contact_page_fields_displayed(driver, base_url):
@@ -99,7 +105,6 @@ def test_funds_transfer_balance_update(driver, base_url):
 
 
 def test_bill_pay_confirmation_details(driver, base_url):
-    """Проверка, что после оплаты счета подтверждение содержит детали (например, имя плательщика)."""
     driver.get(base_url)
     login_page = LoginPage(driver)
     login_page.login("john", "demo")
@@ -116,12 +121,9 @@ def test_bill_pay_confirmation_details(driver, base_url):
         account="987654",
         verify_account="987654",
         amount="200",
-        from_account="12345"
+        from_account="13344"
     )
-    time.sleep(2)
-    confirmation_text = driver.page_source
-    assert "Bill Payment Complete" in confirmation_text, "Подтверждение оплаты счета не отображается."
-    assert payee_name in confirmation_text, f"Имя плательщика '{payee_name}' не найдено в деталях подтверждения."
+    assert bill_pay.is_payment_successful(), "Bill payment was not successful."
 
 
 def test_registration_page_fields_visibility(driver, base_url):

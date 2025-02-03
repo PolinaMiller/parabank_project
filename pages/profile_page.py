@@ -24,3 +24,10 @@ class ProfilePage(BasePage):
         phone_field.send_keys(new_phone)
 
         self.click(self.SAVE_BUTTON)
+
+    def is_update_successful(self):
+        try:
+            self.wait_for_element(self.SUCCESS_MESSAGE, timeout=30)
+            return True
+        except Exception:
+            return False

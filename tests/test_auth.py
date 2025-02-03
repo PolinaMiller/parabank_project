@@ -1,4 +1,5 @@
 import pytest
+import time
 from pages.login_page import LoginPage
 from pages.registration_page import RegistrationPage
 
@@ -32,11 +33,25 @@ class TestAuth:
         logout_link.click()
         assert "Customer Login" in driver.page_source, "Logout failed: Customer Login page not displayed."
 
-    def test_registration_valid(self, driver, base_url):
+    def test_registration_valid(driver, base_url):
         driver.get(f"{base_url}/register.htm")
         registration_page = RegistrationPage(driver)
-        registration_page.register("Test", "User", "123 Main St", "City", "State", "12345",
-                                   "555-1234", "123-45-6789", "testuser1", "password", "password")
+
+        unique_username = f"testuser_{int(time.time())}"
+
+        registration_page.register(
+            first_name="Test",
+            last_name="User",
+            address="123 Main St",
+            city="City",
+            state="State",
+            zip_code="12345",
+            phone="555-1234",
+            ssn="123-45-6789",
+            username=unique_username,
+            password="password",
+            confirm_password="password"
+        )
         assert registration_page.is_registration_successful(
         ), "Registration failed with valid data."
 

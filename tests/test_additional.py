@@ -1,3 +1,4 @@
+import time
 from selenium.webdriver.common.by import By
 import pytest
 from pages.login_page import LoginPage
@@ -87,15 +88,19 @@ def test_access_restricted_after_logout(driver, base_url):
     driver.get(base_url)
     login_page = LoginPage(driver)
     login_page.login("john", "demo")
+
     logout_link = driver.find_element(By.LINK_TEXT, "Log Out")
     logout_link.click()
+    time.sleep(1)
+
     driver.get(f"{base_url}/overview.htm")
 
-    expected_url = f"{base_url}/services/ParaBank?wsdl"
-    assert driver.current_url == expected_url, f"Ожидался URL {expected_url}, но получен {driver.current_url}"
+    page_source = driver.page_source
+    expected_indicator = "Customer Login"
 
-    expected_xml_text = "This XML file does not appear to have any style information associated with it."
-    assert expected_xml_text in driver.page_source, "Ожидаемое XML-сообщение не найдено на странице."
+    assert expected_indicator in page_source, (
+        f"После выхода доступ к защищённой странице разрешён. Ожидается наличие '{expected_indicator}' в странице."
+    )
 
 
 @pytest.mark.parametrize("link_text, expected_text", [
