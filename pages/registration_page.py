@@ -27,7 +27,8 @@ class RegistrationPage(BasePage):
         By.XPATH, "//form[@id='customerForm']//input[@id='repeatedPassword']")
     REGISTER_BUTTON = (
         By.XPATH, "//form[@id='customerForm']//input[@value='Register']")
-    SUCCESS_MESSAGE = (By.XPATH, "//h1[contains(text(),'Welcome')]")
+    ERROR_MESSAGE = (
+        By.XPATH, "//span[contains(@class, 'error') or contains(text(), 'error')]")
 
     def register(self, first_name, last_name, address, city, state, zip_code, phone, ssn, username, password, confirm_password):
         self.send_keys(self.FIRST_NAME_INPUT, first_name)
@@ -44,15 +45,23 @@ class RegistrationPage(BasePage):
         self.click(self.REGISTER_BUTTON)
 
     def is_registration_successful(self):
+        """
+        Проверяет, что регистрация прошла успешно (появилась ссылка "Log Out").
+        """
         try:
-            self.wait_for_element(self.SUCCESS_MESSAGE, timeout=15)
+            self.wait_for_element(self.LOGOUT_LINK, timeout=15)
             return True
         except Exception:
             return False
 
-    def is_error_displayed(self):
+    def get_error_message(self):
+        """
+        Возвращает текст сообщения об ошибке при неуспешной регистрации.
+        Если сообщение не найдено, возвращает None.
+        """
         try:
-            self.wait_for_element(self.ERROR_MESSAGE, timeout=5)
-            return True
+            error_element = self.wait_for_element(
+                self.ERROR_MESSAGE, timeout=5)
+            return error_element.text
         except Exception:
-            return False
+            return None

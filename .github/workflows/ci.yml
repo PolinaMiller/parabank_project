@@ -9,9 +9,12 @@ on:
 jobs:
   tests:
     runs-on: ubuntu-latest
+    env:
+      BASE_URL: https://parabank.parasoft.com/parabank
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -23,12 +26,12 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Download Chrome
+      - name: Download and install Chrome
         run: |
           wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
           sudo dpkg -i google-chrome-stable_current_amd64.deb || sudo apt-get install -f -y
 
-      - name: Download ChromeDriver
+      - name: Download and install ChromeDriver
         run: |
           CHROMEDRIVER_VERSION=$(curl -sS chromedriver.storage.googleapis.com/LATEST_RELEASE)
           wget -O chromedriver.zip https://chromedriver.storage.googleapis.com/${CHROMEDRIVER_VERSION}/chromedriver_linux64.zip
@@ -45,3 +48,8 @@ jobs:
         with:
           name: allure-results
           path: allure-results
+
+      - name: Clean Allure results
+        run: |
+          rm -rf allure-results
+          rm -rf allure-report

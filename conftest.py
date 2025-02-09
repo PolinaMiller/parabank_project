@@ -1,6 +1,7 @@
 import pytest
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service as ChromeService
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -12,7 +13,10 @@ def driver():
     options.add_argument("--headless")
     options.add_argument("--disable-gpu")
     options.add_argument("--window-size=1920,1080")
-    driver = webdriver.Chrome(ChromeDriverManager().install(), options=options)
+
+    service = ChromeService(executable_path=ChromeDriverManager().install())
+    driver = webdriver.Chrome(service=service, options=options)
+
     driver.implicitly_wait(10)
     yield driver
     driver.quit()

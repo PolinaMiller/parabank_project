@@ -8,7 +8,8 @@ class LoginPage(BasePage):
     PASSWORD_INPUT = (
         By.XPATH, "//div[@id='loginPanel']//input[@name='password']")
     LOGIN_BUTTON = (By.XPATH, "//input[@value='Log In']")
-    ERROR_MESSAGE = (By.XPATH, "//p[@class='error']")
+    ERROR_MESSAGE = (
+        By.XPATH, "//div[@id='updateProfileError']//h1[@class='Error!']")
 
     def login(self, username, password):
         self.send_keys(self.USERNAME_INPUT, username)
