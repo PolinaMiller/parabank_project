@@ -1,34 +1,54 @@
-from pages.navigation_page import NavigationPage
-from pages.login_page import LoginPage
+import pytest
+from pages.navigation_page import NavigationService
+from pages.login_page import LoginService
 
-def test_navigation_links(driver, base_url):
+
+@pytest.fixture
+def nav_service(driver, base_url):
+    """
+    Фикстура для выполнения входа в систему и инициализации сервисного объекта NavigationService.
+
+    Шаги:
+      1. Открыть базовый URL.
+      2. Выполнить вход с использованием учетной записи "john" через LoginService.
+      3. Вернуть объект NavigationService для дальнейшего использования в тестах.
+    """
     driver.get(base_url)
-    login_page = LoginPage(driver)
-    login_page.login("john", "demo")
-    navigation = NavigationPage(driver)
-    
+    login_service = LoginService(driver)
+    login_service.login("john", "demo")
+    return NavigationService(driver)
+
+
+def test_welcome_message(driver, base_url):
+    """
+    Тест проверяет, что после входа в систему на странице отображается приветственное сообщение "Welcome".
+    """
+    driver.get(base_url)
+    login_service = LoginService(driver)
+    login_service.login("john", "demo")
     assert "Welcome" in driver.page_source, "Приветственное сообщение не отображается."
 
-    navigation.navigate_to("Open New Account")
-    assert "Open New Account" in driver.page_source, "Страница 'Open New Account' не отображается."
 
-    navigation.navigate_to("Accounts Overview")
-    assert "Accounts Overview" in driver.page_source, "Страница 'Accounts Overview' не отображается."
+@pytest.mark.parametrize("link_text, expected_text", [
+    ("Open New Account", "Open New Account"),
+    ("Accounts Overview", "Accounts Overview"),
+    ("Transfer Funds", "Transfer Funds"),
+    ("Bill Pay", "Bill Pay"),
+    ("Find Transactions", "Find Transactions"),
+    ("Update Contact Info", "Update Contact Info"),
+    ("Request Loan", "Request Loan"),
+    ("Log Out", "Customer Login")
+])
+def test_navigation_links(nav_service, driver, link_text, expected_text):
+    """
+    Тест переходит по каждой навигационной ссылке и проверяет, что после перехода
+    на странице отображается ожидаемый текст.
 
-    navigation.navigate_to("Transfer Funds")
-    assert "Transfer Funds" in driver.page_source, "Страница 'Transfer Funds' не отображается."
-
-    navigation.navigate_to("Bill Pay")
-    assert "Bill Pay" in driver.page_source, "Страница 'Bill Pay' не отображается."
-
-    navigation.navigate_to("Find Transactions")
-    assert "Find Transactions" in driver.page_source, "Страница 'Find Transactions' не отображается."
-
-    navigation.navigate_to("Update Contact Info")
-    assert "Update Contact Info" in driver.page_source, "Страница 'Update Contact Info' не отображается."
-
-    navigation.navigate_to("Request Loan")
-    assert "Request Loan" in driver.page_source, "Страница 'Request Loan' не отображается."
-
-    navigation.navigate_to("Log Out")
-    assert "Customer Login" in driver.page_source, "После выхода не отображается страница 'Customer Login'."
+    :param nav_service: Сервисный объект NavigationService, созданный фикстурой после входа в систему.
+    :param link_text: Текст ссылки, по которой происходит навигация.
+    :param expected_text: Ожидаемый текст на целевой странице после навигации.
+    """
+    nav_service.navigate_to(link_text)
+    assert expected_text in driver.page_source, (
+        f"Страница '{link_text}' не отображается как ожидалось. Ожидается наличие '{expected_text}'."
+    )

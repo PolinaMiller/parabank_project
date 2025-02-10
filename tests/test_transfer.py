@@ -1,23 +1,39 @@
-from pages.funds_transfer_page import FundsTransferPage
-from pages.login_page import LoginPage
+import pytest
+from pages.funds_transfer_page import FundsTransferService
+from pages.login_page import LoginService
+
+# Фикстура для входа в систему и перехода на страницу перевода средств через сервисные объекты.
 
 
-def test_funds_transfer_success(driver, base_url):
+@pytest.fixture
+def transfer_service(driver, base_url):
+    # Открываем главную страницу приложения
     driver.get(base_url)
-    login_page = LoginPage(driver)
-    login_page.login("john", "demo")
+
+    # Используем сервисный объект для входа в систему
+    login_service = LoginService(driver)
+    login_service.login("john", "demo")
+
+    # Переходим на страницу перевода средств
     driver.get(f"{base_url}/transfer.htm")
-    transfer_page = FundsTransferPage(driver)
-    transfer_page.transfer_funds("100", "13344", "13344")
-    assert transfer_page.is_transfer_successful(), "Funds transfer was not successful."
+
+    # Возвращаем сервисный объект страницы перевода средств для дальнейшего использования в тестах
+    return FundsTransferService(driver)
+
+# Параметризованный тест для проверки перевода средств.
+# Используются два набора данных:
+# 1. Корректная сумма перевода ("100")
+# 2. Сумма, превышающая доступный баланс ("1000000"), при которой система всё равно должна инициировать перевод
 
 
-def test_funds_transfer_insufficient_balance(driver, base_url):
-    driver.get(base_url)
-    login_page = LoginPage(driver)
-    login_page.login("john", "demo")
-    driver.get(f"{base_url}/transfer.htm")
-    transfer_page = FundsTransferPage(driver)
-    transfer_page.transfer_funds("1000000", "13344", "13344")
-    assert transfer_page.is_transfer_successful(
-    ), "Funds transfer was not successful, even though insufficient balance scenario is allowed."
+@pytest.mark.parametrize("amount, error_message", [
+    ("100", "Funds transfer was not successful."),
+    ("1000000", "Funds transfer was not successful, even though insufficient balance scenario is allowed.")
+])
+def test_funds_transfer(driver, base_url, transfer_service, amount, error_message):
+    # Инициируем перевод средств с заданной суммой,
+    # где "13344" — номер счета списания и зачисления.
+    transfer_service.transfer_funds(amount, "13344", "13344")
+
+    # Проверяем, что перевод средств выполнен успешно.
+    assert transfer_service.is_transfer_successful(), error_message
