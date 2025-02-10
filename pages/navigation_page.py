@@ -1,3 +1,4 @@
+from pages.navigation_page import NavigationPage
 from pages.base_page import BasePage
 from selenium.webdriver.common.by import By
 
@@ -94,7 +95,7 @@ class NavigationService:
     def __init__(self, driver):
         self.navigation_page = NavigationPage(driver)
 
-    def go_to_page_by_link_text(self, link_text: str) -> None:
+    def navigate_to(self, link_text: str) -> None:
         """
         Переходит на страницу, используя динамический локатор с заданным текстом ссылки.
 

@@ -15,9 +15,7 @@ class ProfilePageElementary(BasePage):
     SUCCESS_MESSAGE = (
         By.XPATH, "//div[@id='updateProfileResult']//h1[contains(text(),'Profile Updated')]")
     ERROR_MESSAGE = (
-        By.XPATH,
-        "//div[@id='updateProfileForm']//span[contains(@class, 'error') and not(contains(@style, 'display:none'))]"
-    )
+        By.XPATH, "//div[@id='updateProfileForm']//span[contains(@class, 'error') and not(contains(@style, 'display:none'))]")
 
     def click_edit_profile(self) -> None:
         """
@@ -35,7 +33,6 @@ class ProfilePageElementary(BasePage):
         """
         Очищает поле ввода номера телефона и вводит новое значение.
         """
-        # Предполагается, что метод clear() реализован в BasePage.
         self.clear(self.PHONE_INPUT)
         self.send_keys(self.PHONE_INPUT, new_phone)
 
@@ -72,6 +69,15 @@ class ProfilePageElementary(BasePage):
             return True
         except Exception:
             return False
+
+    def clear(self, locator: tuple) -> None:
+        """
+        Очищает поле ввода, найденное по указанному локатору.
+
+        :param locator: Локатор элемента (например, (By.XPATH, "...")).
+        """
+        element = self.wait_for_element(locator)
+        element.clear()
 
 
 class ProfilePage(ProfilePageElementary):

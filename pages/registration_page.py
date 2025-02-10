@@ -134,6 +134,20 @@ class RegistrationService:
     Инкапсулирует бизнес-логику, используя Page Object RegistrationPage.
     """
 
+    # Добавляем локаторы для доступа через RegistrationService
+    FIRST_NAME_INPUT = RegistrationPageElementary.FIRST_NAME_INPUT
+    LAST_NAME_INPUT = RegistrationPageElementary.LAST_NAME_INPUT
+    ADDRESS_INPUT = RegistrationPageElementary.ADDRESS_INPUT
+    CITY_INPUT = RegistrationPageElementary.CITY_INPUT
+    STATE_INPUT = RegistrationPageElementary.STATE_INPUT
+    ZIP_CODE_INPUT = RegistrationPageElementary.ZIP_CODE_INPUT
+    PHONE_INPUT = RegistrationPageElementary.PHONE_INPUT
+    SSN_INPUT = RegistrationPageElementary.SSN_INPUT
+    USERNAME_INPUT = RegistrationPageElementary.USERNAME_INPUT
+    PASSWORD_INPUT = RegistrationPageElementary.PASSWORD_INPUT
+    CONFIRM_PASSWORD_INPUT = RegistrationPageElementary.CONFIRM_PASSWORD_INPUT
+    REGISTER_BUTTON = RegistrationPageElementary.REGISTER_BUTTON
+
     def __init__(self, driver):
         self.page = RegistrationPage(driver)
 

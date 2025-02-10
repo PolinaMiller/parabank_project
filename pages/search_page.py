@@ -34,6 +34,8 @@ class SearchService:
     Сервисный объект для работы со страницей поиска.
     Инкапсулирует бизнес-логику, используя элементарный объект страницы.
     """
+    # Добавляем локатор RESULTS в сервис, чтобы тесты могли к нему обращаться.
+    RESULTS = SearchPageElementary.RESULTS
 
     def __init__(self, driver):
         self.page = SearchPageElementary(driver)

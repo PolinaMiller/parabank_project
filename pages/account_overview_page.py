@@ -149,36 +149,14 @@ class AccountOverviewService:
     def __init__(self, driver):
         self.page = AccountOverviewPage(driver)
 
-    def check_account_overview_display(self) -> bool:
-        """
-        Проверяет, что раздел "Accounts Overview" отображается на странице.
-
-        :return: True, если раздел отображается, иначе False.
-        """
+    def is_account_overview_displayed(self) -> bool:
         return self.page.is_account_overview_displayed()
 
-    def fetch_account_balance(self, account_id: str) -> str:
-        """
-        Получает баланс по заданному номеру аккаунта.
-
-        :param account_id: Номер аккаунта.
-        :return: Баланс аккаунта в виде строки.
-        """
+    def get_account_balance(self, account_id: str) -> str:
         return self.page.get_account_balance(account_id)
 
-    def open_account_transaction_history(self, account_id: str) -> None:
-        """
-        Переходит к просмотру истории транзакций по заданному аккаунту.
-
-        :param account_id: Номер аккаунта.
-        """
+    def view_transaction_history(self, account_id: str) -> None:
         self.page.view_transaction_history(account_id)
 
-    def verify_account_presence(self, account_id: str) -> bool:
-        """
-        Проверяет, отображается ли указанный аккаунт на странице.
-
-        :param account_id: Номер аккаунта.
-        :return: True, если аккаунт найден, иначе False.
-        """
+    def is_account_displayed(self, account_id: str) -> bool:
         return self.page.is_account_displayed(account_id)

@@ -102,6 +102,12 @@ class ContactService:
     Инкапсулирует бизнес-логику заполнения и отправки контактной формы,
     используя Page Object ContactPage.
     """
+    # Добавляем локаторы, чтобы тесты могли обращаться к ним через ContactService
+    NAME_INPUT = ContactPageElementary.NAME_INPUT
+    EMAIL_INPUT = ContactPageElementary.EMAIL_INPUT
+    PHONE_INPUT = ContactPageElementary.PHONE_INPUT
+    MESSAGE_INPUT = ContactPageElementary.MESSAGE_INPUT
+    SEND_BUTTON = ContactPageElementary.SEND_BUTTON
 
     def __init__(self, driver):
         self.page = ContactPage(driver)
