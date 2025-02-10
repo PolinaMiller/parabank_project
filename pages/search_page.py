@@ -7,6 +7,11 @@ class SearchPage(BasePage):
     RESULTS = (By.ID, "searchResults")
 
     def is_search_field_present(self):
-        """Возвращает True, если поле поиска найдено на странице, иначе False."""
+        """
+        Проверяет, присутствует ли на странице поле поиска.
+
+        Возвращает:
+            bool: True, если хотя бы один элемент найден по локатору SEARCH_INPUT, иначе False.
+        """
         elements = self.driver.find_elements(*self.SEARCH_INPUT)
         return len(elements) > 0

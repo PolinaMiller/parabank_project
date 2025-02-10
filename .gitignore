@@ -14,12 +14,6 @@ dist/
 .cache/
 *.html
 
-allure-results/
-
-Dockerfile*
-docker-compose*.yml
-*.log
-
 .vscode/
 .idea/
 

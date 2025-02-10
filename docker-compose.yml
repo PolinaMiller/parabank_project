@@ -1,0 +1,10 @@
+version: '3'
+services:
+  parabank_tests:
+    build: .
+    container_name: parabank_tests
+    volumes:
+      - .:/app
+      - ./allure-results:/app/allure-results
+    environment:
+      - DISPLAY=:99

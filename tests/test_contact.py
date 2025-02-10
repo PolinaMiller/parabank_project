@@ -1,24 +1,35 @@
+import pytest
 from pages.contact_page import ContactPage
-from pages.login_page import LoginPage
-import time
 
 
-def test_contact_us_submission(driver, base_url):
-    driver.get(base_url)
+@pytest.fixture
+def contact_page(driver, base_url):
+    """
+    Фикстура для инициализации страницы "Contact Us".
+
+    Шаги:
+      1. Переход на страницу контактов.
+      2. Возвращает объект ContactPage для дальнейших действий в тестах.
+    """
     driver.get(f"{base_url}/contact.htm")
-    contact_page = ContactPage(driver)
-    contact_page.submit_contact_form(
-        "Test User", "test@example.com", "555-1234", "This is a test message.")
-    assert contact_page.is_submission_successful(), "Contact form submission failed."
+    return ContactPage(driver)
 
 
-def test_contact_form_invalid_email(driver, base_url):
-    """Проверка, что контактная форма принимает email с неверным форматом."""
-    driver.get(f"{base_url}/contact.htm")
-    contact_page = ContactPage(driver)
-    contact_page.submit_contact_form(
-        "Test User", "invalidemail", "555-1234", "Проверка неверного email."
-    )
-    time.sleep(1)
-    assert contact_page.is_submission_successful(), \
-        "Контактная форма не приняла email с неверным форматом."
+@pytest.mark.parametrize("email, message, error_message", [
+    # Тестовый сценарий с корректными данными
+    ("test@example.com", "This is a test message.",
+     "Contact form submission failed."),
+    # Тестовый сценарий с некорректным форматом email
+    ("invalidemail", "Проверка неверного email.",
+     "Контактная форма не приняла email с неверным форматом.")
+])
+def test_contact_form_submission(contact_page, email, message, error_message):
+    """
+    Тест проверяет отправку контактной формы как с корректными, так и с некорректными данными email.
+
+    Ожидается, что система примет данные и отобразит сообщение об успешной отправке формы.
+    """
+    # Заполнение и отправка формы обратной связи с указанными параметрами
+    contact_page.submit_contact_form("Test User", email, "555-1234", message)
+    # Проверяем, что сообщение об успешной отправке формы отображается на странице
+    assert contact_page.is_submission_successful(), error_message
