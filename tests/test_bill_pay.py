@@ -1,58 +1,72 @@
 import pytest
-from pages.bill_pay_page import BillPayPage
-from pages.login_page import LoginPage
+import allure
+import logging
+from selenium.webdriver.common.by import By
+# Используем сервисный объект, а не прямой Page Object
+from pages.bill_pay_page import BillPayService
+from pages.login_page import LoginService
 
-# Фикстура для инициализации страницы оплаты счетов.
+# Настройка логирования: вывод сообщений уровня INFO и выше.
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s"
+)
+logger = logging.getLogger(__name__)
 
 
 @pytest.fixture
-def bill_pay_page(driver, base_url):
+def bill_pay_service(driver, base_url):
     """
     Выполняет вход в систему и переходит на страницу оплаты счетов.
 
     Шаги:
       1. Открывает базовый URL.
-      2. Выполняет вход под учетными данными "john"/"demo".
+      2. Выполняет вход под учетными данными "john"/"demo" через LoginService.
       3. Переходит на страницу "billpay.htm".
-      4. Возвращает объект BillPayPage для дальнейших действий в тестах.
+      4. Возвращает объект BillPayService для дальнейших действий в тестах.
     """
-    driver.get(base_url)
-    login_page = LoginPage(driver)
-    login_page.login("john", "demo")
-    driver.get(f"{base_url}/billpay.htm")
-    return BillPayPage(driver)
-
-# Параметризированный тест для проверки различных сценариев оплаты счета.
+    with allure.step("Открыть базовый URL"):
+        logger.info("Открытие базового URL: %s", base_url)
+        driver.get(base_url)
+    with allure.step("Выполнить вход под пользователем 'john'"):
+        logger.info("Выполняется вход с учетными данными: john/demo")
+        login_service = LoginService(driver)
+        login_service.login("john", "demo")
+    with allure.step("Перейти на страницу оплаты счетов"):
+        page_url = f"{base_url}/billpay.htm"
+        logger.info("Переход на страницу оплаты счетов: %s", page_url)
+        driver.get(page_url)
+    return BillPayService(driver)
 
 
 @pytest.mark.parametrize(
     "payee_name, address, city, state, zip_code, phone, account, verify_account, amount, from_account, expected_result, error_msg",
     [
-        # 1. Корректная оплата счета
+        # TC-7: Корректная оплата счета
         (
             "Electric Company", "456 Electric Ave", "City", "State", "67890",
             "555-6789", "987654", "987654", "200", "13344",
             "success", "Bill payment was not successful."
         ),
-        # 2. Неверный получатель (пустое поле для payee_name)
+        # TC-8: Оплата с пустым полем получателя (Invalid Payee)
         (
             "", "456 Electric Ave", "City", "State", "67890",
             "555-6789", "987654", "987654", "200", "13344",
             "payee_error", "Error message not displayed for invalid payee."
         ),
-        # 3. Отрицательная сумма оплаты (система ожидаемо обрабатывает отрицательные суммы как корректные)
+        # TC-9: Оплата с отрицательной суммой
         (
             "Negative Bill", "456 Negative Ave", "City", "State", "22222",
             "555-2222", "111111", "111111", "-100", "13344",
             "success", "Оплата счета с отрицательной суммой не была выполнена успешно."
         ),
-        # 4. Несоответствие номера счета и его подтверждения
+        # TC-10: Несоответствие номера счета и его подтверждения
         (
             "Mismatch Bill", "789 Mismatch Rd", "City", "State", "33333",
             "555-3333", "222222", "333333", "150", "13344",
             "mismatch_error", "Ошибка не отображается при несовпадении номеров счета в оплате счета."
         ),
-        # 5. Нечисловое значение суммы оплаты
+        # TC-11: Оплата с нечисловым значением суммы
         (
             "NonNumeric Bill", "101 NonNumeric Blvd", "City", "State", "44444",
             "555-4444", "444444", "444444", "abc", "13344",
@@ -60,8 +74,10 @@ def bill_pay_page(driver, base_url):
         ),
     ]
 )
+@allure.feature("Bill Pay")
+@allure.story("Проверка сценариев оплаты счета")
 def test_bill_pay_scenarios(
-    bill_pay_page,
+    bill_pay_service,
     payee_name, address, city, state, zip_code, phone,
     account, verify_account, amount, from_account,
     expected_result, error_msg
@@ -69,21 +85,34 @@ def test_bill_pay_scenarios(
     """
     Параметризированный тест для проверки различных сценариев оплаты счета:
       - Корректная оплата счета.
-      - Оплата с пустым именем получателя (invalid payee).
-      - Оплата с отрицательной суммой (ожидается, что система выполнит операцию успешно).
+      - Оплата с пустым именем получателя (Invalid Payee).
+      - Оплата с отрицательной суммой.
       - Оплата с несовпадающими номерами счета и подтверждения.
       - Оплата с нечисловым значением суммы.
     """
-    bill_pay_page.pay_bill(
-        payee_name, address, city, state, zip_code, phone,
-        account, verify_account, amount, from_account
-    )
-
-    if expected_result == "success":
-        assert bill_pay_page.is_payment_successful(), error_msg
-    elif expected_result == "payee_error":
-        assert bill_pay_page.is_payment_error_displayed(), error_msg
-    elif expected_result == "mismatch_error":
-        assert bill_pay_page.is_verify_account_mismatch_error_displayed(), error_msg
-    elif expected_result == "amount_invalid":
-        assert bill_pay_page.is_amount_invalid_error_displayed(), error_msg
+    with allure.step("Заполнить форму оплаты счета"):
+        logger.info(
+            "Заполнение формы оплаты счета: payee_name='%s', address='%s', city='%s', state='%s', "
+            "zip_code='%s', phone='%s', account='%s', verify_account='%s', amount='%s', from_account='%s'",
+            payee_name, address, city, state, zip_code, phone, account, verify_account, amount, from_account
+        )
+        bill_pay_service.pay_bill(
+            payee_name, address, city, state, zip_code, phone,
+            account, verify_account, amount, from_account
+        )
+    with allure.step("Проверить результат оплаты"):
+        if expected_result == "success":
+            logger.info("Ожидается успешная оплата счета.")
+            assert bill_pay_service.is_payment_successful(), error_msg
+        elif expected_result == "payee_error":
+            logger.info(
+                "Ожидается отображение ошибки из-за пустого имени получателя.")
+            assert bill_pay_service.is_payment_error_displayed(), error_msg
+        elif expected_result == "mismatch_error":
+            logger.info(
+                "Ожидается отображение ошибки из-за несовпадения номеров счета.")
+            assert bill_pay_service.is_verify_account_mismatch_error_displayed(), error_msg
+        elif expected_result == "amount_invalid":
+            logger.info(
+                "Ожидается отображение ошибки из-за нечислового значения суммы оплаты.")
+            assert bill_pay_service.is_amount_invalid_error_displayed(), error_msg

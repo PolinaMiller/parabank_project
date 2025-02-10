@@ -1,36 +1,32 @@
 import pytest
-from pages.navigation_page import NavigationPage
-from pages.login_page import LoginPage
-
-# Фикстура для входа в систему и инициализации объекта NavigationPage
+from pages.navigation_page import NavigationService
+from pages.login_page import LoginService
 
 
 @pytest.fixture
-def nav_page(driver, base_url):
+def nav_service(driver, base_url):
     """
-    Фикстура для выполнения входа в систему и возврата объекта NavigationPage.
+    Фикстура для выполнения входа в систему и инициализации сервисного объекта NavigationService.
 
     Шаги:
       1. Открыть базовый URL.
-      2. Выполнить вход с использованием учетной записи "john".
-      3. Вернуть объект NavigationPage для дальнейшего использования в тестах.
+      2. Выполнить вход с использованием учетной записи "john" через LoginService.
+      3. Вернуть объект NavigationService для дальнейшего использования в тестах.
     """
     driver.get(base_url)
-    login_page = LoginPage(driver)
-    login_page.login("john", "demo")
-    return NavigationPage(driver)
+    login_service = LoginService(driver)
+    login_service.login("john", "demo")
+    return NavigationService(driver)
 
 
 def test_welcome_message(driver, base_url):
     """
-    Проверяет, что после входа в систему на странице отображается приветственное сообщение "Welcome".
+    Тест проверяет, что после входа в систему на странице отображается приветственное сообщение "Welcome".
     """
     driver.get(base_url)
-    login_page = LoginPage(driver)
-    login_page.login("john", "demo")
+    login_service = LoginService(driver)
+    login_service.login("john", "demo")
     assert "Welcome" in driver.page_source, "Приветственное сообщение не отображается."
-
-# Параметризированный тест для проверки навигационных ссылок.
 
 
 @pytest.mark.parametrize("link_text, expected_text", [
@@ -43,16 +39,16 @@ def test_welcome_message(driver, base_url):
     ("Request Loan", "Request Loan"),
     ("Log Out", "Customer Login")
 ])
-def test_navigation_links(nav_page, driver, link_text, expected_text):
+def test_navigation_links(nav_service, driver, link_text, expected_text):
     """
     Тест переходит по каждой навигационной ссылке и проверяет, что после перехода
     на странице отображается ожидаемый текст.
 
-    :param nav_page: Объект NavigationPage, предоставляемый фикстурой, после входа в систему.
+    :param nav_service: Сервисный объект NavigationService, созданный фикстурой после входа в систему.
     :param link_text: Текст ссылки, по которой происходит навигация.
     :param expected_text: Ожидаемый текст на целевой странице после навигации.
     """
-    nav_page.navigate_to(link_text)
+    nav_service.navigate_to(link_text)
     assert expected_text in driver.page_source, (
         f"Страница '{link_text}' не отображается как ожидалось. Ожидается наличие '{expected_text}'."
     )

@@ -3,60 +3,55 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
 
 
-class FundsTransferPage(BasePage):
+class FundsTransferPageElementary(BasePage):
     """
-    Класс FundsTransferPage предоставляет методы для выполнения перевода средств
-    между счетами, а также для проверки успешности или наличия ошибок при выполнении операции.
+    Элементарный объект страницы перевода средств.
+    Содержит локаторы и базовые методы для непосредственного взаимодействия с элементами страницы.
     """
-
-    # Локатор для поля ввода суммы перевода
+    # Локаторы элементов страницы перевода средств
     AMOUNT_INPUT = (By.ID, "amount")
-    # Локатор для выпадающего списка исходного счета
     FROM_ACCOUNT_SELECT = (By.ID, "fromAccountId")
-    # Локатор для выпадающего списка счета получателя
     TO_ACCOUNT_SELECT = (By.ID, "toAccountId")
-    # Локатор для кнопки, запускающей перевод средств
     TRANSFER_BUTTON = (By.XPATH, "//input[@value='Transfer']")
-    # Локатор для сообщения об успешном завершении перевода
     SUCCESS_MESSAGE = (
         By.XPATH, "//div[@id='showResult']//h1[contains(text(),'Transfer Complete')]")
-    # Локатор для сообщения об ошибке, возникающей при переводе средств
     ERROR_MESSAGE = (
         By.XPATH, "//div[@id='showError']//h1[contains(text(), 'Error!')]")
 
-    def transfer_funds(self, amount: str, from_account: str, to_account: str) -> None:
+    def clear_and_send_keys(self, locator: tuple, keys: str) -> None:
         """
-        Выполняет перевод средств с одного счета на другой.
+        Очищает поле, найденное по заданному локатору, и отправляет в него указанные данные.
 
-        Шаги:
-          1. Очищает поле ввода суммы и вводит переданное значение.
-          2. Выбирает исходный счет и счет получателя из соответствующих выпадающих списков.
-          3. Инициирует перевод, кликая по кнопке "Transfer".
-
-        :param amount: Сумма перевода в виде строки.
-        :param from_account: Значение для выбора исходного счета.
-        :param to_account: Значение для выбора счета получателя.
+        :param locator: Кортеж (например, (By.ID, "elementId")).
+        :param keys: Строка, которую нужно ввести.
         """
-        self.clear_and_send_keys(self.AMOUNT_INPUT, amount)
+        element = self.find_element(locator)
+        element.clear()
+        element.send_keys(keys)
 
-        # Выбираем исходный счет из выпадающего списка
-        from_select = Select(self.find_element(self.FROM_ACCOUNT_SELECT))
-        from_select.select_by_value(from_account)
+    def select_from_dropdown_by_value(self, locator: tuple, value: str) -> None:
+        """
+        Выбирает значение из выпадающего списка по атрибуту value.
 
-        # Выбираем счет получателя из выпадающего списка
-        to_select = Select(self.find_element(self.TO_ACCOUNT_SELECT))
-        to_select.select_by_value(to_account)
+        :param locator: Локатор элемента Select.
+        :param value: Значение атрибута value для выбора.
+        """
+        select = Select(self.find_element(locator))
+        select.select_by_value(value)
 
-        # Кликаем по кнопке перевода для отправки формы
+    def click_transfer_button(self) -> None:
+        """
+        Нажимает на кнопку, запускающую перевод средств.
+        """
         self.click(self.TRANSFER_BUTTON)
 
-    def _is_element_visible(self, locator: tuple, timeout: int) -> bool:
+    def is_element_visible(self, locator: tuple, timeout: int) -> bool:
         """
-        Вспомогательный метод для проверки, что элемент, заданный локатором, появляется на странице.
+        Вспомогательный метод для проверки, что элемент появляется на странице в течение заданного времени.
 
-        :param locator: Локатор элемента в виде кортежа (например, (By.XPATH, "...")).
-        :param timeout: Максимальное время ожидания в секундах.
-        :return: True, если элемент появляется в течение указанного времени, иначе False.
+        :param locator: Локатор элемента.
+        :param timeout: Время ожидания в секундах.
+        :return: True, если элемент найден, иначе False.
         """
         try:
             self.wait_for_element(locator, timeout=timeout)
@@ -64,29 +59,98 @@ class FundsTransferPage(BasePage):
         except Exception:
             return False
 
+    def wait_for_success_message(self, timeout: int = 15) -> bool:
+        """
+        Ожидает появления сообщения об успешном переводе средств.
+
+        :param timeout: Время ожидания в секундах.
+        :return: True, если сообщение появилось, иначе False.
+        """
+        return self.is_element_visible(self.SUCCESS_MESSAGE, timeout)
+
+    def wait_for_error_message(self, timeout: int = 5) -> bool:
+        """
+        Ожидает появления сообщения об ошибке при переводе средств.
+
+        :param timeout: Время ожидания в секундах.
+        :return: True, если сообщение появилось, иначе False.
+        """
+        return self.is_element_visible(self.ERROR_MESSAGE, timeout)
+
+
+class FundsTransferPage(FundsTransferPageElementary):
+    """
+    Page Object для страницы перевода средств.
+    Объединяет элементарные операции в высокоуровневые действия для перевода средств.
+    """
+
+    def transfer_funds(self, amount: str, from_account: str, to_account: str) -> None:
+        """
+        Выполняет перевод средств с одного счета на другой.
+
+        Шаги:
+          1. Очищает поле ввода суммы и вводит указанное значение.
+          2. Выбирает исходный и целевой счета из выпадающих списков.
+          3. Инициирует перевод, нажав на кнопку.
+
+        :param amount: Сумма перевода.
+        :param from_account: Значение для выбора исходного счета.
+        :param to_account: Значение для выбора счета получателя.
+        """
+        self.clear_and_send_keys(self.AMOUNT_INPUT, amount)
+        self.select_from_dropdown_by_value(
+            self.FROM_ACCOUNT_SELECT, from_account)
+        self.select_from_dropdown_by_value(self.TO_ACCOUNT_SELECT, to_account)
+        self.click_transfer_button()
+
     def is_transfer_successful(self) -> bool:
         """
-        Проверяет, что перевод средств выполнен успешно, ожидая появления сообщения об успехе.
+        Проверяет, что перевод средств выполнен успешно.
 
-        :return: True, если сообщение об успешном переводе найдено в течение 15 секунд, иначе False.
+        :return: True, если сообщение об успешном переводе отображается, иначе False.
         """
-        return self._is_element_visible(self.SUCCESS_MESSAGE, timeout=15)
+        return self.wait_for_success_message(timeout=15)
 
     def is_transfer_error_displayed(self) -> bool:
         """
         Проверяет, отображается ли сообщение об ошибке при выполнении перевода средств.
 
-        :return: True, если сообщение об ошибке найдено в течение 5 секунд, иначе False.
+        :return: True, если сообщение об ошибке найдено, иначе False.
         """
-        return self._is_element_visible(self.ERROR_MESSAGE, timeout=5)
+        return self.wait_for_error_message(timeout=5)
 
-    def clear_and_send_keys(self, locator: tuple, keys: str) -> None:
-        """
-        Очищает поле, найденное по заданному локатору, и отправляет в него указанные данные.
 
-        :param locator: Кортеж, содержащий стратегию поиска и значение (например, (By.ID, "elementId")).
-        :param keys: Строка, которую нужно ввести в найденное поле.
+class FundsTransferService:
+    """
+    Сервисный объект для работы с переводом средств.
+    Инкапсулирует бизнес-логику, используя Page Object FundsTransferPage.
+    """
+
+    def __init__(self, driver):
+        self.page = FundsTransferPage(driver)
+
+    def transfer_funds(self, amount: str, from_account: str, to_account: str) -> None:
         """
-        element = self.find_element(locator)
-        element.clear()
-        element.send_keys(keys)
+        Выполняет перевод средств, используя Page Object.
+
+        :param amount: Сумма перевода.
+        :param from_account: Значение для выбора исходного счета.
+        :param to_account: Значение для выбора счета получателя.
+        """
+        self.page.transfer_funds(amount, from_account, to_account)
+
+    def is_transfer_successful(self) -> bool:
+        """
+        Проверяет успешность перевода средств.
+
+        :return: True, если перевод выполнен успешно, иначе False.
+        """
+        return self.page.is_transfer_successful()
+
+    def is_transfer_error_displayed(self) -> bool:
+        """
+        Проверяет, отображается ли сообщение об ошибке перевода.
+
+        :return: True, если сообщение об ошибке найдено, иначе False.
+        """
+        return self.page.is_transfer_error_displayed()
