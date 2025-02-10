@@ -93,3 +93,14 @@ class BaseServiceObject:
         :param driver: Экземпляр WebDriver для взаимодействия с браузером.
         """
         self.driver = driver
+
+
+# Для совместимости с тестами создаем класс BasePage,
+# который можно импортировать из pages/base_page.py
+class BasePage(BasePageElementary):
+    """
+    Базовый класс для всех страниц, используемый в тестах.
+
+    Этот класс наследует функциональность из BasePageElementary.
+    """
+    pass
